@@ -1,0 +1,39 @@
+plugins {
+    alias(libs.plugins.android.library)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.maven.publish)
+}
+
+android {
+    namespace = "dev.figranium.sdk"
+    compileSdk = 37
+
+    defaultConfig {
+        minSdk = 23
+        consumerProguardFiles("consumer-rules.pro")
+    }
+}
+
+kotlin { jvmToolchain(17) }
+
+dependencies {
+    api(libs.coroutines.core)
+    implementation(libs.okhttp)
+    implementation(libs.serialization.json)
+}
+
+mavenPublishing {
+    coordinates("dev.figranium", "figranium", providers.gradleProperty("VERSION_NAME").get())
+    publishToMavenCentral()
+    signAllPublications()
+    pom {
+        name.set("Figranium Kotlin SDK")
+        description.set("Official Kotlin and Android SDK for the Figranium API.")
+        inceptionYear.set("2026")
+        url.set("https://figranium.dev")
+        licenses { license { name.set("Apache-2.0"); url.set("https://www.apache.org/licenses/LICENSE-2.0.txt") } }
+        developers { developer { id.set("figranium"); name.set("Figranium"); url.set("https://github.com/figranium") } }
+        scm { url.set("https://github.com/figranium/figranium-kotlin"); connection.set("scm:git:git://github.com/figranium/figranium-kotlin.git"); developerConnection.set("scm:git:ssh://git@github.com/figranium/figranium-kotlin.git") }
+    }
+}
