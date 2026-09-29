@@ -69,7 +69,7 @@ object FigraniumAppFunctions {
     suspend fun setEnabled(context: Context, enabled: Boolean) {
         if (Build.VERSION.SDK_INT < 36) return
         AppFunctionManager.getInstance(context)?.setAppFunctionEnabled(
-            BaseFigraniumAppFunctionServiceIds.RUN_FIGRANIUM_TASK_ID,
+            FigraniumAppFunctionService.FUNCTION_ID_RUN_FIGRANIUM_TASK,
             if (enabled) AppFunctionManager.APP_FUNCTION_STATE_ENABLED else AppFunctionManager.APP_FUNCTION_STATE_DISABLED,
         )
     }
