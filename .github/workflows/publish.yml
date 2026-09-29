@@ -1,6 +1,7 @@
 name: Verify and publish
 
 on:
+  workflow_dispatch:
   release:
     types: [published]
 
