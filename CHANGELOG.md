@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.0] - 2026-10-03
+
+### Added
+
+- v0.20 Templates API client with catalog listing, paginated search, detail retrieval and explicit successful-import tracking.
+- Template import tracking preserves server-side per-installation counting.
+
+
 All notable changes to Figranium Kotlin are documented in this file.
 
 ## [0.1.0] - 2026-09-29
