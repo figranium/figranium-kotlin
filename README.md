@@ -28,7 +28,7 @@
 
 ```kotlin
 dependencies {
-    implementation("dev.figranium:figranium:0.1.0")
+    implementation("dev.figranium:figranium:0.2.0")
 }
 ```
 
@@ -40,7 +40,7 @@ plugins {
 }
 
 dependencies {
-    implementation("dev.figranium:figranium-appfunctions:0.1.0")
+    implementation("dev.figranium:figranium-appfunctions:0.2.0")
     ksp("androidx.appfunctions:appfunctions-compiler:1.0.0-alpha10")
 }
 ```
@@ -122,7 +122,7 @@ Pass `RequestOptions(headers = ..., timeoutMillis = ...)` to any resource call t
 
 | Resource | Purpose |
 | --- | --- |
-| `tasks` | Save, update, delete, version, generate, and execute tasks |
+| `templates` | Browse, search and retrieve templates; report successful imports |\n| `tasks` | Save, update, delete, version, generate, and execute tasks |
 | `executions` | List, inspect, stop, delete, clear, stream, and watch runs |
 | `schedules` | Configure, describe, disable, and inspect schedules |
 | `captures` | List/delete recordings and screenshots; manage cookies |
