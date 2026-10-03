@@ -1,6 +1,9 @@
 name: Verify and publish
 
 on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/publish.yml']
   workflow_dispatch:
   release:
     types: [published]
