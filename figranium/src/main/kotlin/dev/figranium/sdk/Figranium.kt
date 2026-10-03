@@ -49,7 +49,7 @@ class Figranium @JvmOverloads constructor(
     val auth = AuthResource(this); val tasks = TasksResource(this); val executions = ExecutionsResource(this)
     val schedules = SchedulesResource(this); val captures = CapturesResource(this); val cabinets = CabinetsResource(this)
     val credentials = CredentialsResource(this); val browser = BrowserResource(this); val settings = SettingsResource(this)
-    val execution = ExecutionResource(this); val health = HealthResource(this)
+    val execution = ExecutionResource(this); val health = HealthResource(this); val templates = TemplatesResource(this)
 
     suspend inline fun <reified T> runTask(id: String, input: ExecuteTaskOptions = ExecuteTaskOptions(), options: RequestOptions = RequestOptions()): ExecutionResult<T> = tasks.run(id, input, options)
     suspend inline fun <reified T> scrape(input: JSONObject, options: RequestOptions = RequestOptions()): ExecutionResult<T> = execution.scrape(input, options)
