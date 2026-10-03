@@ -1,5 +1,7 @@
 # Changelog
 
+All notable changes to Figranium Kotlin are documented in this file.
+
 ## [0.2.0] - 2026-10-03
 
 ### Added
@@ -8,7 +10,6 @@
 - Template import tracking preserves server-side per-installation counting.
 
 
-All notable changes to Figranium Kotlin are documented in this file.
 
 ## [0.1.0] - 2026-09-29
 
