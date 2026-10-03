@@ -2,6 +2,7 @@ package dev.figranium.sdk
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
 
 /** Figranium v0.20 template catalog; tracking is separate from saving a task. */
 class TemplatesResource(private val client: Figranium) {
@@ -22,7 +23,7 @@ class TemplatesResource(private val client: Figranium) {
 
     /** Call only after a successful local import; each instance contributes once per template. */
     suspend fun recordImport(id: String, options: RequestOptions = RequestOptions()): JsonElement =
-        client.request("POST", "/api/templates/${encodeTemplateId(id)}/import", JsonElement.serializer(), options = options)
+        client.request("POST", "/api/templates/${encodeTemplateId(id)}/import", JsonElement.serializer(), body = JsonObject(emptyMap()), options = options)
 
     private fun encodeTemplateId(id: String): String {
         require(Regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$").matches(id)) {
