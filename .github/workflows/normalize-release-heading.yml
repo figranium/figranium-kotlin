@@ -1,0 +1,36 @@
+name: Normalize release heading
+on:
+  push:
+    paths:
+      - .github/workflows/normalize-release-heading.yml
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Update release notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cat > /tmp/release-notes.md <<'RELEASE_NOTES_EOF'
+          # v0.2.0
+          
+          Adds coroutine-based support for the Templates API in Figranium v0.20.
+          
+          ## What's new
+          
+          - **Catalog:** `client.templates.list()` fetches the unpaginated catalog.
+          - **Search and pagination:** `client.templates.search(limit = 12, offset = 0, sort = "popular", category = "all", search = "...")` returns a typed `TemplatesResource.Page` with `items` and `total`.
+          - **Template details:** `client.templates.get(id)` retrieves a template.
+          - **Import tracking:** `client.templates.recordImport(id)` reports an import after a template has been saved as a local task.
+          
+          These methods use the existing SDK's authentication, request options and error handling. Import tracking does not create a task; the Figranium server handles per-instance download counting.
+          
+          **Version:** Both `dev.figranium:figranium` and `dev.figranium:figranium-appfunctions` use version `0.2.0` in this repository. A GitHub release does not itself confirm Maven Central publication.
+          
+          See [CHANGELOG.md](https://github.com/figranium/figranium-kotlin/blob/main/CHANGELOG.md) for release history.
+          
+          RELEASE_NOTES_EOF
+          gh release edit v0.2.0 --notes-file /tmp/release-notes.md
