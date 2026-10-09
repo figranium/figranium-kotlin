@@ -20,13 +20,6 @@ private fun string(value: String?) = value?.let(::JsonPrimitive)
 @PublishedApi internal suspend inline fun <reified T> Figranium.get(path: String, query: Map<String, String?> = emptyMap(), options: RequestOptions = RequestOptions()): T = request("GET", path, serializer(), query = query, options = options)
 @PublishedApi internal suspend inline fun <reified T> Figranium.send(method: String, path: String, body: JsonElement? = null, query: Map<String, String?> = emptyMap(), options: RequestOptions = RequestOptions()): T = request(method, path, serializer(), body, query, options)
 
-class AuthResource internal constructor(private val client: Figranium) {
-    suspend fun checkSetup(options: RequestOptions = RequestOptions()): JsonObject = client.get("/api/auth/check-setup", options = options)
-    suspend fun setup(name: String, email: String, password: String, options: RequestOptions = RequestOptions()): JsonObject = client.send("POST", "/api/auth/setup", jsonObject("name" to string(name), "email" to string(email), "password" to string(password)), options = options)
-    suspend fun login(email: String, password: String, options: RequestOptions = RequestOptions()): JsonObject = client.send("POST", "/api/auth/login", jsonObject("email" to string(email), "password" to string(password)), options = options)
-    suspend fun logout(options: RequestOptions = RequestOptions()): JsonObject = client.send("POST", "/api/auth/logout", options = options)
-    suspend fun me(options: RequestOptions = RequestOptions()): JsonObject = client.get("/api/auth/me", options = options)
-}
 
 class TasksResource internal constructor(@PublishedApi internal val client: Figranium) {
     suspend fun list(options: RequestOptions = RequestOptions()): List<Task> = client.get("/api/tasks", options = options)
@@ -67,10 +60,7 @@ class CapturesResource internal constructor(private val client: Figranium) {
     suspend fun list(runId: String? = null, options: RequestOptions = RequestOptions()): List<Capture> = client.get<JsonObject>("/api/data/captures", mapOf("runId" to runId), options).getValue("captures").let { client.json.decodeFromJsonElement(ListSerializer(Capture.serializer()), it) }
     suspend fun screenshots(options: RequestOptions = RequestOptions()): List<Capture> = client.get<JsonObject>("/api/data/screenshots", options = options).getValue("screenshots").let { client.json.decodeFromJsonElement(ListSerializer(Capture.serializer()), it) }
     suspend fun delete(name: String, options: RequestOptions = RequestOptions()): JsonObject = client.send("DELETE", "/api/data/captures/${pathId(name)}", options = options)
-    suspend fun cookies(options: RequestOptions = RequestOptions()): JsonObject = client.get("/api/data/cookies", options = options)
-    suspend fun deleteCookie(name: String, domain: String? = null, path: String? = null, options: RequestOptions = RequestOptions()): JsonObject = client.send("POST", "/api/data/cookies/delete", jsonObject("name" to string(name), "domain" to string(domain), "path" to string(path)), options = options)
     suspend fun clear(options: RequestOptions = RequestOptions()): JsonObject = client.send("POST", "/api/data/clear-screenshots", options = options)
-    suspend fun clearCookies(options: RequestOptions = RequestOptions()): JsonObject = client.send("POST", "/api/data/clear-cookies", options = options)
 }
 
 class CabinetsResource internal constructor(private val client: Figranium) {
@@ -87,45 +77,8 @@ class CabinetsResource internal constructor(private val client: Figranium) {
     fun downloadUrl(cabinetId: String, itemId: String): String = client.baseUrl.newBuilder().addPathSegments("api/cabinets/${pathId(cabinetId)}/items/${pathId(itemId)}/download").build().toString()
 }
 
-class CredentialsResource internal constructor(private val client: Figranium) {
-    suspend fun list(options: RequestOptions = RequestOptions()): List<Credential> = client.get("/api/credentials", options = options)
-    suspend fun create(input: CredentialInput, options: RequestOptions = RequestOptions()): Credential = client.send("POST", "/api/credentials", client.json.encodeToJsonElement(CredentialInput.serializer(), input), options = options)
-    suspend fun update(id: String, input: CredentialInput, options: RequestOptions = RequestOptions()): Credential = client.send("PUT", "/api/credentials/${pathId(id)}", client.json.encodeToJsonElement(CredentialInput.serializer(), input), options = options)
-    suspend fun delete(id: String, options: RequestOptions = RequestOptions()): JsonObject = client.send("DELETE", "/api/credentials/${pathId(id)}", options = options)
-    suspend fun baserowDatabases(id: String, options: RequestOptions = RequestOptions()): JsonObject = client.get("/api/credentials/${pathId(id)}/proxy/baserow/databases", options = options)
-    suspend fun baserowTables(id: String, databaseId: String, options: RequestOptions = RequestOptions()): JsonObject = client.get("/api/credentials/${pathId(id)}/proxy/baserow/databases/${pathId(databaseId)}/tables", options = options)
-}
 
-class BrowserResource internal constructor(private val client: Figranium) {
-    suspend fun open(input: JsonObject = JsonObject(emptyMap()), options: RequestOptions = RequestOptions()): BrowserSession = client.send("POST", "/api/browser/open", input, options = options)
-    suspend fun highlight(input: JsonObject, options: RequestOptions = RequestOptions()): JsonObject = client.send("POST", "/api/inspector/highlight", input, options = options)
-    suspend fun stopHeadful(options: RequestOptions = RequestOptions()): JsonObject = client.send("POST", "/headful/stop", options = options)
-    suspend fun headfulStatus(options: RequestOptions = RequestOptions()): JsonObject = client.get("/api/headful/status", options = options)
-    suspend fun inspect(options: RequestOptions = RequestOptions()): JsonObject = client.send("POST", "/api/headful/inspect", options = options)
-    suspend fun vncPassword(options: RequestOptions = RequestOptions()): String = client.get<JsonObject>("/api/headful/vnc-password", options = options).getValue("password").jsonPrimitive.content
-    fun selectorStream(options: RequestOptions = RequestOptions()): Flow<StreamEvent<JsonElement>> = client.stream("/api/headful/selector_stream", options)
-}
 
-class SettingsResource internal constructor(private val client: Figranium) {
-    suspend fun getApiKey(options: RequestOptions = RequestOptions()): JsonObject = client.get("/api/settings/api-key", options = options)
-    suspend fun setApiKey(key: String? = null, options: RequestOptions = RequestOptions()): JsonObject = client.send("POST", "/api/settings/api-key", jsonObject("apiKey" to string(key)), options = options)
-    suspend fun getUserAgent(options: RequestOptions = RequestOptions()): JsonObject = client.get("/api/settings/user-agent", options = options)
-    suspend fun setUserAgent(selection: String?, options: RequestOptions = RequestOptions()): JsonObject = client.send("POST", "/api/settings/user-agent", jsonObject("selection" to string(selection)), options = options)
-    suspend fun getAiModels(options: RequestOptions = RequestOptions()): JsonObject = client.get("/api/settings/ai-models", options = options)
-    suspend fun setAiModels(models: JsonObject, options: RequestOptions = RequestOptions()): JsonObject = client.send("POST", "/api/settings/ai-models", models, options = options)
-    suspend fun getTheme(options: RequestOptions = RequestOptions()): JsonObject = client.get("/api/settings/theme", options = options)
-    suspend fun setTheme(theme: String, options: RequestOptions = RequestOptions()): JsonObject = client.send("POST", "/api/settings/theme", jsonObject("theme" to string(theme)), options = options)
-    suspend fun listProxies(options: RequestOptions = RequestOptions()): JsonObject = client.get("/api/settings/proxies", options = options)
-    suspend fun addProxy(proxy: ProxyInput, options: RequestOptions = RequestOptions()): JsonObject = client.send("POST", "/api/settings/proxies", client.json.encodeToJsonElement(ProxyInput.serializer(), proxy), options = options)
-    suspend fun importProxies(proxies: List<ProxyInput>, options: RequestOptions = RequestOptions()): JsonObject = client.send("POST", "/api/settings/proxies/import", jsonObject("proxies" to client.json.encodeToJsonElement(ListSerializer(ProxyInput.serializer()), proxies)), options = options)
-    suspend fun updateProxy(id: String, proxy: ProxyInput, options: RequestOptions = RequestOptions()): JsonObject = client.send("PUT", "/api/settings/proxies/${pathId(id)}", client.json.encodeToJsonElement(ProxyInput.serializer(), proxy), options = options)
-    suspend fun deleteProxy(id: String, options: RequestOptions = RequestOptions()): JsonObject = client.send("DELETE", "/api/settings/proxies/${pathId(id)}", options = options)
-    suspend fun deleteProxies(ids: List<String>, options: RequestOptions = RequestOptions()): JsonObject = client.send("DELETE", "/api/settings/proxies", jsonObject("ids" to client.json.encodeToJsonElement(ListSerializer(String.serializer()), ids)), options = options)
-    suspend fun setDefaultProxy(id: String?, options: RequestOptions = RequestOptions()): JsonObject = client.send("POST", "/api/settings/proxies/default", jsonObject("id" to string(id)), options = options)
-    suspend fun setProxyRotation(input: JsonObject, options: RequestOptions = RequestOptions()): JsonObject = client.send("POST", "/api/settings/proxies/rotation", input, options = options)
-    suspend fun providerKeys(provider: String, options: RequestOptions = RequestOptions()): JsonObject = client.get("/api/settings/${if (provider == "openai") "openai-api-key" else "$provider-api-key"}", options = options)
-    suspend fun setProviderKeys(provider: String, keys: List<String>, options: RequestOptions = RequestOptions()): JsonObject { val name = if (provider == "openai") "openai-api-key" else "$provider-api-key"; val key = if (provider == "openai") "openAiApiKeys" else "${provider}ApiKeys"; return client.send("POST", "/api/settings/$name", jsonObject(key to client.json.encodeToJsonElement(ListSerializer(String.serializer()), keys)), options = options) }
-}
 
 class ExecutionResource internal constructor(@PublishedApi internal val client: Figranium) {
     suspend inline fun <reified T> scrape(input: JSONObject, options: RequestOptions = RequestOptions()): ExecutionResult<T> = client.send("POST", "/scrape", JsonObject(input), options = options)
