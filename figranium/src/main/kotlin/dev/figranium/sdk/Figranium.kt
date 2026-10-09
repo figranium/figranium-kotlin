@@ -46,9 +46,9 @@ class Figranium @JvmOverloads constructor(
     @PublishedApi internal val json: Json = Json { ignoreUnknownKeys = true; explicitNulls = false; encodeDefaults = false },
 ) {
     @PublishedApi internal val baseUrl: HttpUrl = baseUrl.trim().removeSuffix("/").toHttpUrl()
-    val auth = AuthResource(this); val tasks = TasksResource(this); val executions = ExecutionsResource(this)
+    val tasks = TasksResource(this); val executions = ExecutionsResource(this)
     val schedules = SchedulesResource(this); val captures = CapturesResource(this); val cabinets = CabinetsResource(this)
-    val credentials = CredentialsResource(this); val browser = BrowserResource(this); val settings = SettingsResource(this)
+    
     val execution = ExecutionResource(this); val health = HealthResource(this); val templates = TemplatesResource(this)
 
     suspend inline fun <reified T> runTask(id: String, input: ExecuteTaskOptions = ExecuteTaskOptions(), options: RequestOptions = RequestOptions()): ExecutionResult<T> = tasks.run(id, input, options)
