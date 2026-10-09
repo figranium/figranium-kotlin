@@ -127,11 +127,7 @@ Pass `RequestOptions(headers = ..., timeoutMillis = ...)` to any resource call t
 | `schedules` | Configure, describe, disable, and inspect schedules |
 | `captures` | List/delete recordings and screenshots; manage cookies |
 | `cabinets` | Manage intercepted downloads and other files |
-| `credentials` | Manage output credentials and browse Baserow metadata |
-| `browser` | Open sessions, highlight selectors, inspect headful sessions, and stream selector events |
 | `execution` | Direct `scrape`, `agent`, and `headful` execution endpoints |
-| `settings` | Session-protected keys, AI providers/models, themes, user agents, and proxies |
-| `auth` | Setup, login, logout, and current-user methods |
 | `health` | Service health check |
 
 ## Android AppFunctions
