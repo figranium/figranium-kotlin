@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0] - 2026-10-09
+
+- Removed remote authentication, credentials, settings, and interactive browser administration resources.
+- Removed legacy cookie administration from captures.
+- Preserved automation tasks, executions, schedules, templates, cabinets, captures, and health checks.
+
+
 All notable changes to Figranium Kotlin are documented in this file.
 
 ## [0.2.0] - 2026-10-03
