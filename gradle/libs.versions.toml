@@ -5,7 +5,7 @@ ksp = "2.2.20-2.0.3"
 okhttp = "5.1.0"
 serialization = "1.9.0"
 coroutines = "1.10.2"
-appfunctions = "1.0.0-alpha10"
+appfunctions = "1.0.0-alpha13"
 mavenPublish = "0.34.0"
 
 [libraries]
