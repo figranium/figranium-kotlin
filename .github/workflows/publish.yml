@@ -8,24 +8,53 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: maven-central-${{ github.event.release.tag_name || github.ref }}
+  cancel-in-progress: false
+
 jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event_name == 'release' && github.event.release.tag_name || github.ref }}
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
           cache: gradle
+      - name: Validate release version
+        if: github.event_name == 'release'
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          VERSION="$(sed -n 's/^VERSION_NAME=//p' gradle.properties | tr -d '\r')"
+          if [ -z "$VERSION" ] || [ "$RELEASE_TAG" != "v$VERSION" ]; then
+            echo "::error::Release tag $RELEASE_TAG does not match VERSION_NAME=$VERSION"
+            exit 1
+          fi
+      - name: Validate publishing credentials
+        env:
+          MAVEN_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          SIGNING_KEY: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
+          SIGNING_PASSWORD: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
+        run: |
+          for name in MAVEN_USERNAME MAVEN_PASSWORD SIGNING_KEY SIGNING_PASSWORD; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Missing $name publishing credential"
+              exit 1
+            fi
+          done
       - name: Install Android SDK packages
         run: |
-          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses || true
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37.0" "build-tools;37.0.0"
       - name: Verify
         run: ./gradlew check
-      - name: Publish to Maven Central
-        run: ./gradlew publishToMavenCentral --no-configuration-cache
+      - name: Publish and release on Maven Central
+        run: ./gradlew publishAndReleaseToMavenCentral --no-configuration-cache
         env:
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
           ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
