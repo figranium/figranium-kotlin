@@ -89,6 +89,23 @@ val result = client.runTask<JsonElement>(saved.id!!)
 
 `variable("query")` creates Figranium’s `{$query}` template token. Action builders assign unique action IDs automatically.
 
+For Figranium v0.21+, a Task can select a saved cookie state or request a fresh one. Kotlin uses `JsonElement?` to distinguish all three wire formats:
+
+```kotlin
+val inherited = task.copy(cookieStateId = null) // omitted; instance default
+val fresh = task.copy(cookieStateId = JsonNull) // explicit JSON null
+val named = task.copy(cookieStateId = JsonPrimitive("cookie-state-id"))
+
+val baserowTask = named.copy(output = TaskOutput(
+    credentialId = "baserow-credential-id",
+    tableId = "table-id",
+    databaseId = "database-id",
+    dedicated = true,
+))
+```
+
+The legacy `statelessExecution` field is deprecated. Scoped API keys must have the relevant Task permissions and cannot bypass Task allowlists. Manage scoped keys, cookie states, 1Password credentials, Baserow connections, imports/exports and Cloud sign-in in the authenticated Figranium workspace UI.
+
 ## Streams and execution watching
 
 ```kotlin
