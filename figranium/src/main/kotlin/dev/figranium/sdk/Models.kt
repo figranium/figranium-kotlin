@@ -23,7 +23,10 @@ data class RequestOptions(val headers: Map<String, String> = emptyMap(), val tim
     val minute: Int? = null, val daysOfWeek: List<Int>? = null, val dayOfMonth: Int? = null, val cron: String? = null,
     val lastRun: Double? = null, val lastRunStatus: String? = null, val lastRunDurationMs: Double? = null, val nextRun: Double? = null,
 )
-@Serializable data class TaskOutput(val provider: String = "baserow", val credentialId: String, val tableId: String, val onError: String? = null)
+@Serializable data class TaskOutput(
+    val provider: String = "baserow", val credentialId: String, val tableId: String, val onError: String? = null,
+    val databaseId: String? = null, val dedicated: Boolean? = null,
+)
 
 /** Every public action field from Figranium's task API. Prefer [Actions] for common actions. */
 @Serializable data class Action(
@@ -44,6 +47,8 @@ data class RequestOptions(val headers: Map<String, String> = emptyMap(), val tim
     val output: TaskOutput? = null, val extractionScript: String? = null, val extractionFormat: String? = null,
     val includeHtml: Boolean? = null, val includeShadowDom: Boolean? = null, val disableRecording: Boolean? = null,
     val statelessExecution: Boolean? = null, val downloadCabinetId: String? = null, val cabinetId: String? = null,
+    /** Omit to inherit the instance default, use JsonNull for fresh state, or JsonPrimitive(id) for a named state. */
+    val cookieStateId: JsonElement? = null,
 )
 
 @Serializable data class ExecuteTaskOptions(val variables: RuntimeVariables? = null, val taskVariables: RuntimeVariables? = null, val webhookUrl: String? = null, val runId: String? = null)
