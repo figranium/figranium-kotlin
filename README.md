@@ -41,7 +41,7 @@ plugins {
 
 dependencies {
     implementation("dev.figranium:figranium-appfunctions:0.2.0")
-    ksp("androidx.appfunctions:appfunctions-compiler:1.0.0-alpha10")
+    ksp("androidx.appfunctions:appfunctions-compiler:1.0.0-beta01")
 }
 ```
 
