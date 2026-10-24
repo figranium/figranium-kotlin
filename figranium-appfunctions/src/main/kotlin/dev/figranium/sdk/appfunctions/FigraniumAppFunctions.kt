@@ -9,7 +9,7 @@ import androidx.appfunctions.AppFunctionManager
 import androidx.appfunctions.AppFunctionService
 import androidx.appfunctions.AppFunctionServiceEntryPoint
 import androidx.appfunctions.AppFunctionSerializable
-import androidx.appfunctions.AppFunction
+import androidx.appfunctions.AppFunctionDeclaration
 import dev.figranium.sdk.Figranium
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -51,7 +51,7 @@ data class FigraniumAppFunctionResult(
 @AppFunctionServiceEntryPoint(serviceName = "FigraniumAppFunctionService", appFunctionXmlFileName = "figranium_app_functions")
 abstract class BaseFigraniumAppFunctionService : AppFunctionService() {
     /** Runs one explicitly approved deterministic Figranium task. */
-    @AppFunction(isEnabled = false, isDescribedByKDoc = true)
+    @AppFunctionDeclaration(isEnabled = false, isDescribedByKDoc = true)
     suspend fun runFigraniumTask(parameters: RunFigraniumTaskParameters): FigraniumAppFunctionResult = withContext(Dispatchers.IO) {
         check(FigraniumAppFunctions.allowedTaskIds().contains(parameters.taskId)) { "This task is not approved for AppFunctions execution." }
         val result = FigraniumAppFunctionConfiguration.client().runTask<JsonObject>(parameters.taskId)
