@@ -104,7 +104,25 @@ val baserowTask = named.copy(output = TaskOutput(
 ))
 ```
 
-The legacy `statelessExecution` field is deprecated. Scoped API keys must have the relevant Task permissions and cannot bypass Task allowlists. Manage scoped keys, cookie states, 1Password credentials, Baserow connections, imports/exports and Cloud sign-in in the authenticated Figranium workspace UI.
+The legacy `statelessExecution` field is deprecated. Scoped API keys must have the relevant Task permissions and cannot bypass Task allowlists. Cookie-state administration is session-only; the SDK can use an already authenticated OkHttp client but does not perform interactive login:
+
+```kotlin
+val sessionClient = Figranium(
+    baseUrl = "https://figranium.example",
+    authentication = FigraniumAuthentication.Session,
+    httpClient = authenticatedOkHttpClient, // supply workspace cookies via CookieJar
+)
+val states = sessionClient.cookieStates.list()
+val created = sessionClient.cookieStates.create(
+    "login",
+    kotlinx.serialization.json.buildJsonObject {
+        put("cookies", kotlinx.serialization.json.JsonArray(emptyList()))
+        put("origins", kotlinx.serialization.json.JsonArray(emptyList()))
+    },
+)
+```
+
+Session-authenticated mutations automatically include the CSRF hint `X-Requested-With: XMLHttpRequest` unless an Origin, Referer, or X-Requested-With header is supplied. Scoped API keys cannot administer cookie states. Manage scoped keys, 1Password credentials, Baserow connections, imports/exports and Cloud sign-in in the authenticated Figranium workspace UI.
 
 ## Streams and execution watching
 
@@ -139,10 +157,12 @@ Pass `RequestOptions(headers = ..., timeoutMillis = ...)` to any resource call t
 
 | Resource | Purpose |
 | --- | --- |
-| `templates` | Browse, search and retrieve templates; report successful imports |\n| `tasks` | Save, update, delete, version, generate, and execute tasks |
+| `templates` | Browse, search and retrieve templates; report successful imports |
+| `tasks` | Save, update, delete, version, generate, and execute tasks |
+| `cookieStates` | Session-only list/get/create/rename/update/delete browser storage states |
 | `executions` | List, inspect, stop, delete, clear, stream, and watch runs |
 | `schedules` | Configure, describe, disable, and inspect schedules |
-| `captures` | List/delete recordings and screenshots; manage cookies |
+| `captures` | List/delete recordings and screenshots |
 | `cabinets` | Manage intercepted downloads and other files |
 | `execution` | Direct `scrape`, `agent`, and `headful` execution endpoints |
 | `health` | Service health check |
