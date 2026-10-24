@@ -47,6 +47,7 @@ class Figranium @JvmOverloads constructor(
 ) {
     @PublishedApi internal val baseUrl: HttpUrl = baseUrl.trim().removeSuffix("/").toHttpUrl()
     val tasks = TasksResource(this); val executions = ExecutionsResource(this)
+    val cookieStates = CookieStatesResource(this)
     val schedules = SchedulesResource(this); val captures = CapturesResource(this); val cabinets = CabinetsResource(this)
     
     val execution = ExecutionResource(this); val health = HealthResource(this); val templates = TemplatesResource(this)
@@ -57,12 +58,17 @@ class Figranium @JvmOverloads constructor(
     suspend inline fun <reified T> headful(input: JSONObject, options: RequestOptions = RequestOptions()): ExecutionResult<T> = execution.headful(input, options)
 
     @PublishedApi internal suspend fun <T> request(method: String, path: String, serializer: KSerializer<T>, body: JsonElement? = null, query: Map<String, String?> = emptyMap(), options: RequestOptions = RequestOptions()): T {
-        val url = baseUrl.newBuilder().addPathSegments(path.trim('/')).apply { query.forEach { (key, value) -> if (!value.isNullOrEmpty()) addQueryParameter(key, value) } }.build()
+        val url = baseUrl.newBuilder().addEncodedPathSegments(path.trim('/')).apply { query.forEach { (key, value) -> if (!value.isNullOrEmpty()) addQueryParameter(key, value) } }.build()
         val request = Request.Builder().url(url).method(method, body?.let { json.encodeToString(JsonElement.serializer(), it).toRequestBody(JSON_MEDIA_TYPE) }).apply {
             header("accept", "application/json")
             if (body != null) header("content-type", "application/json")
             headers.forEach { (key, value) -> header(key, value) }; options.headers.forEach { (key, value) -> header(key, value) }
             if (authentication is FigraniumAuthentication.ApiKey) header(authentication.header, if (authentication.header.equals("authorization", true)) "Bearer ${authentication.value}" else authentication.value)
+            if (authentication == FigraniumAuthentication.Session && method.uppercase() !in setOf("GET", "HEAD", "OPTIONS") &&
+                listOf("origin", "referer", "x-requested-with").none { name ->
+                    (headers.keys + options.headers.keys).any { it.equals(name, ignoreCase = true) }
+                }
+            ) header("X-Requested-With", "XMLHttpRequest")
         }.build()
         val client = if (options.timeoutMillis == null) httpClient.newBuilder().callTimeout(timeoutMillis, TimeUnit.MILLISECONDS).build() else httpClient.newBuilder().callTimeout(options.timeoutMillis, TimeUnit.MILLISECONDS).build()
         val response = client.newCall(request).await()
@@ -75,7 +81,7 @@ class Figranium @JvmOverloads constructor(
     }
 
     internal fun stream(path: String, options: RequestOptions = RequestOptions()): Flow<StreamEvent<JsonElement>> = callbackFlow {
-        val request = Request.Builder().url(baseUrl.newBuilder().addPathSegments(path.trim('/')).build()).header("accept", "text/event-stream").apply {
+        val request = Request.Builder().url(baseUrl.newBuilder().addEncodedPathSegments(path.trim('/')).build()).header("accept", "text/event-stream").apply {
             headers.forEach { (key, value) -> header(key, value) }; options.headers.forEach { (key, value) -> header(key, value) }
             if (authentication is FigraniumAuthentication.ApiKey) header(authentication.header, if (authentication.header.equals("authorization", true)) "Bearer ${authentication.value}" else authentication.value)
         }.build()
