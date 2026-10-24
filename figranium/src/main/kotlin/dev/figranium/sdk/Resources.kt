@@ -14,12 +14,33 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import kotlinx.serialization.serializer
 
-@PublishedApi internal fun pathId(value: String) = value.replace("/", "%2F")
+@PublishedApi internal fun pathId(value: String) = java.net.URLEncoder.encode(value, "UTF-8").replace("+", "%20")
 private fun jsonObject(vararg values: Pair<String, JsonElement?>) = buildJsonObject { values.forEach { (key, value) -> if (value != null) put(key, value) } }
 private fun string(value: String?) = value?.let(::JsonPrimitive)
 @PublishedApi internal suspend inline fun <reified T> Figranium.get(path: String, query: Map<String, String?> = emptyMap(), options: RequestOptions = RequestOptions()): T = request("GET", path, serializer(), query = query, options = options)
 @PublishedApi internal suspend inline fun <reified T> Figranium.send(method: String, path: String, body: JsonElement? = null, query: Map<String, String?> = emptyMap(), options: RequestOptions = RequestOptions()): T = request(method, path, serializer(), body, query, options)
 
+
+/** Named browser storage states are managed using an authenticated workspace session. */
+class CookieStatesResource internal constructor(private val client: Figranium) {
+    suspend fun list(options: RequestOptions = RequestOptions()): JsonObject =
+        client.get("/api/cookie-states", options = options)
+
+    suspend fun get(id: String, options: RequestOptions = RequestOptions()): JsonObject =
+        client.get("/api/cookie-states/${pathId(id)}", options = options)
+
+    suspend fun create(name: String, state: JsonObject, options: RequestOptions = RequestOptions()): JsonObject =
+        client.send("POST", "/api/cookie-states", jsonObject("name" to string(name), "state" to state), options = options)
+
+    suspend fun rename(id: String, name: String, options: RequestOptions = RequestOptions()): JsonObject =
+        client.send("PATCH", "/api/cookie-states/${pathId(id)}", jsonObject("name" to string(name)), options = options)
+
+    suspend fun update(id: String, state: JsonObject, options: RequestOptions = RequestOptions()): JsonObject =
+        client.send("PATCH", "/api/cookie-states/${pathId(id)}", jsonObject("state" to state), options = options)
+
+    suspend fun delete(id: String, options: RequestOptions = RequestOptions()): JsonObject =
+        client.send("DELETE", "/api/cookie-states/${pathId(id)}", options = options)
+}
 
 class TasksResource internal constructor(@PublishedApi internal val client: Figranium) {
     suspend fun list(options: RequestOptions = RequestOptions()): List<Task> = client.get("/api/tasks", options = options)
