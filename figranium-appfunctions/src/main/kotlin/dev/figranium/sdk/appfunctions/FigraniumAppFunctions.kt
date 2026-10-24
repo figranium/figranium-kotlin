@@ -25,13 +25,13 @@ object FigraniumAppFunctionConfiguration {
     internal fun client(): Figranium = checkNotNull(provider) { "Configure FigraniumAppFunctionConfiguration before invoking Figranium AppFunctions." }.client()
 }
 
-@AppFunctionSerializable
+@AppFunctionSerializable(isDescribedByKDoc = true)
 data class RunFigraniumTaskParameters(
     /** The ID of an app-approved deterministic Figranium task. */
     val taskId: String,
 )
 
-@AppFunctionSerializable
+@AppFunctionSerializable(isDescribedByKDoc = true)
 data class FigraniumAppFunctionResult(
     /** The Figranium execution outcome, such as success or error. */
     val outcome: String,
