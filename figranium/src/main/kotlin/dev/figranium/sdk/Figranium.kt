@@ -80,8 +80,8 @@ class Figranium @JvmOverloads constructor(
         }
     }
 
-    internal fun stream(path: String, options: RequestOptions = RequestOptions()): Flow<StreamEvent<JsonElement>> = callbackFlow {
-        val request = Request.Builder().url(baseUrl.newBuilder().addEncodedPathSegments(path.trim('/')).build()).header("accept", "text/event-stream").apply {
+    internal fun stream(path: String, query: Map<String, String> = emptyMap(), options: RequestOptions = RequestOptions()): Flow<StreamEvent<JsonElement>> = callbackFlow {
+        val request = Request.Builder().url(baseUrl.newBuilder().addEncodedPathSegments(path.trim('/')).apply { query.forEach { (key, value) -> addQueryParameter(key, value) } }.build()).header("accept", "text/event-stream").apply {
             headers.forEach { (key, value) -> header(key, value) }; options.headers.forEach { (key, value) -> header(key, value) }
             if (authentication is FigraniumAuthentication.ApiKey) header(authentication.header, if (authentication.header.equals("authorization", true)) "Bearer ${authentication.value}" else authentication.value)
         }.build()
