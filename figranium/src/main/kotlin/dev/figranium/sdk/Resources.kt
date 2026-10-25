@@ -64,7 +64,8 @@ class ExecutionsResource internal constructor(private val client: Figranium) {
     suspend fun delete(id: String, options: RequestOptions = RequestOptions()): JsonObject = client.send("DELETE", "/api/executions/${pathId(id)}", options = options)
     suspend fun clear(options: RequestOptions = RequestOptions()): JsonObject = client.send("POST", "/api/executions/clear", options = options)
     suspend fun stop(runId: String, options: RequestOptions = RequestOptions()): JsonObject = client.send("POST", "/api/executions/stop", jsonObject("runId" to string(runId)), options = options)
-    fun stream(options: RequestOptions = RequestOptions()): Flow<StreamEvent<JsonElement>> = client.stream("/api/executions/stream", options)
+    /** Streams events for a run; requires a workspace session, not an API key. */
+    fun stream(runId: String, options: RequestOptions = RequestOptions()): Flow<StreamEvent<JsonElement>> = client.stream("/api/executions/stream", mapOf("runId" to runId), options)
     fun watch(executionId: String, intervalMillis: Long = 1_000, options: RequestOptions = RequestOptions()): Flow<Execution> = flow { var previous: String? = null; while (true) { val execution = get(executionId, options); val status = execution.status; if (status != previous) { emit(execution); previous = status }; if ((execution.outcome ?: status) in TERMINAL_OUTCOMES) break; delay(intervalMillis) } }
 }
 
