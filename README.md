@@ -127,7 +127,7 @@ Session-authenticated mutations automatically include the CSRF hint `X-Requested
 ## Streams and execution watching
 
 ```kotlin
-client.executions.stream().collect { event ->
+client.executions.stream("run-id").collect { event ->
     println("${event.event ?: "message"}: ${event.data}")
 }
 
@@ -136,7 +136,7 @@ client.executions.watch("execution-id").collect { execution ->
 }
 ```
 
-`Flow` collection is cancellable, so streams close automatically with the calling coroutine.
+`Flow` collection is cancellable, so streams close automatically with the calling coroutine. The execution stream requires a workspace session and a run ID; an API key alone cannot open `/api/executions/stream`.
 
 ## Error handling
 
