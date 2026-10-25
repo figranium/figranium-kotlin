@@ -46,6 +46,7 @@ class Figranium @JvmOverloads constructor(
     @PublishedApi internal val json: Json = Json { ignoreUnknownKeys = true; explicitNulls = false; encodeDefaults = false },
 ) {
     @PublishedApi internal val baseUrl: HttpUrl = baseUrl.trim().removeSuffix("/").toHttpUrl()
+    internal val usesSession: Boolean get() = authentication == FigraniumAuthentication.Session
     val tasks = TasksResource(this); val executions = ExecutionsResource(this)
     val cookieStates = CookieStatesResource(this)
     val schedules = SchedulesResource(this); val captures = CapturesResource(this); val cabinets = CabinetsResource(this)
