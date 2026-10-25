@@ -59,8 +59,10 @@ class TasksResource internal constructor(@PublishedApi internal val client: Figr
 }
 
 class ExecutionsResource internal constructor(private val client: Figranium) {
-    suspend fun list(apiKeyRoute: Boolean = true, options: RequestOptions = RequestOptions()): List<Execution> = client.get<JsonObject>(if (apiKeyRoute) "/api/executions/list" else "/api/executions", options = options).getValue("executions").let { client.json.decodeFromJsonElement(ListSerializer(Execution.serializer()), it) }
+    suspend fun list(apiKeyRoute: Boolean? = null, options: RequestOptions = RequestOptions()): List<Execution> = client.get<JsonObject>(if (apiKeyRoute ?: !client.usesSession) "/api/executions/list" else "/api/executions", options = options).getValue("executions").let { client.json.decodeFromJsonElement(ListSerializer(Execution.serializer()), it) }
     suspend fun get(id: String, options: RequestOptions = RequestOptions()): Execution = client.get<JsonObject>("/api/executions/${pathId(id)}", options = options).getValue("execution").let { client.json.decodeFromJsonElement(Execution.serializer(), it) }
+    /** Fetches the complete stored result; API keys need results:read and Task access. */
+    suspend fun getFullResult(id: String, options: RequestOptions = RequestOptions()): JsonElement = client.get<JsonObject>("/api/executions/${pathId(id)}/result", options = options).getValue("result")
     suspend fun delete(id: String, options: RequestOptions = RequestOptions()): JsonObject = client.send("DELETE", "/api/executions/${pathId(id)}", options = options)
     suspend fun clear(options: RequestOptions = RequestOptions()): JsonObject = client.send("POST", "/api/executions/clear", options = options)
     suspend fun stop(runId: String, options: RequestOptions = RequestOptions()): JsonObject = client.send("POST", "/api/executions/stop", jsonObject("runId" to string(runId)), options = options)

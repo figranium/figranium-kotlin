@@ -138,6 +138,8 @@ client.executions.watch("execution-id").collect { execution ->
 
 `Flow` collection is cancellable, so streams close automatically with the calling coroutine. The execution stream requires a workspace session and a run ID; an API key alone cannot open `/api/executions/stream`.
 
+`client.executions.list()` selects the workspace-session route when authenticated with `Session`, or the `results:read` API-key route otherwise. Set `apiKeyRoute` explicitly to override it. The server's numeric HTTP execution statuses are decoded as strings for compatibility. `client.executions.getFullResult("execution-id")` retrieves a retained complete result as `JsonElement`; scoped API keys need `results:read` and access to that execution's Task.
+
 ## Error handling
 
 ```kotlin

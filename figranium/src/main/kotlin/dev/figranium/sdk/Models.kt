@@ -1,8 +1,16 @@
 package dev.figranium.sdk
 
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.jsonPrimitive
 
 typealias JSONObject = Map<String, JsonElement>
 typealias RuntimeVariables = Map<String, JsonElement>
@@ -54,7 +62,15 @@ data class RequestOptions(val headers: Map<String, String> = emptyMap(), val tim
 @Serializable data class ExecuteTaskOptions(val variables: RuntimeVariables? = null, val taskVariables: RuntimeVariables? = null, val webhookUrl: String? = null, val runId: String? = null)
 @Serializable data class ExecutionResult<T>(val data: T? = null, val outcome: String? = null, val success: Boolean? = null, val error: String? = null, val runId: String? = null)
 data class StreamEvent<T>(val data: T, val event: String? = null, val id: String? = null, val retry: Int? = null, val raw: String)
-@Serializable data class Execution(val id: String, val timestamp: Double, val method: String? = null, val path: String? = null, val status: String? = null, val outcome: String? = null, val durationMs: Double? = null, val source: String? = null, val mode: String? = null, val taskId: String? = null, val taskName: String? = null, val url: String? = null, val result: JsonElement? = null)
+/** Accept the server's numeric HTTP status without changing the public String? field. */
+object ExecutionStatusSerializer : KSerializer<String> {
+    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ExecutionStatus", PrimitiveKind.STRING)
+    override fun deserialize(decoder: Decoder): String =
+        if (decoder is JsonDecoder) decoder.decodeJsonElement().jsonPrimitive.content else decoder.decodeString()
+    override fun serialize(encoder: Encoder, value: String) = encoder.encodeString(value)
+}
+
+@Serializable data class Execution(val id: String, val timestamp: Double, val method: String? = null, val path: String? = null, @Serializable(with = ExecutionStatusSerializer::class) val status: String? = null, val outcome: String? = null, val durationMs: Double? = null, val source: String? = null, val mode: String? = null, val taskId: String? = null, val taskName: String? = null, val url: String? = null, val result: JsonElement? = null)
 @Serializable data class TaskSummary(val id: String, val name: String, val description: String? = null)
 @Serializable data class TaskVersion(val id: String, val timestamp: Double, val name: String? = null, val mode: String? = null)
 @Serializable data class Cabinet(val id: String, val name: String, val isDefault: Boolean? = null, val itemCount: Int? = null, val createdAt: Double? = null)
