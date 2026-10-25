@@ -65,6 +65,8 @@ println(result.outcome) // success | error | stopped | crashed | anti_bot
 
 `baseUrl` defaults to `http://localhost:11345`. API keys use `Authorization: Bearer`; use `FigraniumAuthentication.ApiKey(key, "x-api-key")` for deployments that expect that header.
 
+`tasks.listSummaries()` uses `/api/tasks/list` with API keys and `/api/tasks` with authenticated workspace sessions. Figranium's retired AI selector/script-generation endpoints are not exposed by the SDK.
+
 ## Define a task in Kotlin
 
 ```kotlin
