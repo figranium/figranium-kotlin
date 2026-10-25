@@ -44,7 +44,12 @@ class CookieStatesResource internal constructor(private val client: Figranium) {
 
 class TasksResource internal constructor(@PublishedApi internal val client: Figranium) {
     suspend fun list(options: RequestOptions = RequestOptions()): List<Task> = client.get("/api/tasks", options = options)
-    suspend fun listSummaries(options: RequestOptions = RequestOptions()): List<TaskSummary> = client.get<JsonObject>("/api/tasks/list", options = options).getValue("tasks").let { client.json.decodeFromJsonElement(ListSerializer(TaskSummary.serializer()), it) }
+    /** Workspace sessions use /api/tasks; /api/tasks/list is reserved for API keys. */
+    suspend fun listSummaries(options: RequestOptions = RequestOptions()): List<TaskSummary> {
+        if (client.usesSession) return client.get("/api/tasks", options = options)
+        return client.get<JsonObject>("/api/tasks/list", options = options).getValue("tasks")
+            .let { client.json.decodeFromJsonElement(ListSerializer(TaskSummary.serializer()), it) }
+    }
     suspend fun save(task: Task, createVersion: Boolean = false, options: RequestOptions = RequestOptions()): Task = client.send("POST", "/api/tasks", client.json.encodeToJsonElement(Task.serializer(), task), mapOf("version" to if (createVersion) "true" else null), options)
     suspend fun touch(id: String, options: RequestOptions = RequestOptions()): Task = client.send("POST", "/api/tasks/${pathId(id)}/touch", options = options)
     suspend fun update(id: String, patch: JsonObject, options: RequestOptions = RequestOptions()): JsonObject = client.send("PATCH", "/api/tasks/${pathId(id)}", patch, options = options)
@@ -53,8 +58,6 @@ class TasksResource internal constructor(@PublishedApi internal val client: Figr
     suspend fun version(id: String, versionId: String, options: RequestOptions = RequestOptions()): JsonObject = client.get("/api/tasks/${pathId(id)}/versions/${pathId(versionId)}", options = options)
     suspend fun clearVersions(id: String, options: RequestOptions = RequestOptions()): JsonObject = client.send("POST", "/api/tasks/${pathId(id)}/versions/clear", options = options)
     suspend fun rollback(id: String, versionId: String, options: RequestOptions = RequestOptions()): Task = client.send("POST", "/api/tasks/${pathId(id)}/rollback", jsonObject("versionId" to string(versionId)), options = options)
-    suspend fun generateSelector(task: Task, actionIndex: Int, prompt: String, options: RequestOptions = RequestOptions()): String = client.send<JsonObject>("POST", "/api/tasks/generate-selector", jsonObject("task" to client.json.encodeToJsonElement(Task.serializer(), task), "actionIndex" to JsonPrimitive(actionIndex), "prompt" to string(prompt)), options = options).getValue("selector").jsonPrimitive.content
-    suspend fun generateScript(description: String, options: RequestOptions = RequestOptions()): String = client.send<JsonObject>("POST", "/api/tasks/generate-script", jsonObject("description" to string(description)), options = options).getValue("script").jsonPrimitive.content
     suspend inline fun <reified T> run(id: String, input: ExecuteTaskOptions = ExecuteTaskOptions(), options: RequestOptions = RequestOptions()): ExecutionResult<T> = client.send("POST", "/tasks/${pathId(id)}/api", client.json.encodeToJsonElement(ExecuteTaskOptions.serializer(), input), options = options)
 }
 
