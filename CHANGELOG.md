@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Preserve the distinction between omitted, explicit `null` (fresh), and named `cookieStateId` values when decoding and re-encoding Tasks; add round-trip tests.
 - Added session-only `tasks.deleteVersion(id, versionId)` for Figranium v0.21 Task version deletion, with response, encoding and CSRF regression coverage.
 - Corrected Cabinet list decoding for the v0.21 `{ defaultCabinetId, cabinets }` response envelope.
 - Corrected Cabinet ZIP extraction to decode a single `CabinetItem` rather than an `items` wrapper.
