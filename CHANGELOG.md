@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Corrected Cabinet list decoding for the v0.21 `{ defaultCabinetId, cabinets }` response envelope.
+- Corrected Cabinet ZIP extraction to decode a single `CabinetItem` rather than an `items` wrapper.
+- Added the optional `unuploadedCount` Cabinet field and response-shape regression tests.
+
 ## [0.3.0] - 2026-10-09
 
 - Removed remote authentication, credentials, settings, and interactive browser administration resources.
