@@ -1,6 +1,8 @@
 package dev.figranium.sdk
 
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.KeepGeneratedSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.PrimitiveKind
@@ -10,6 +12,9 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonPrimitive
 
 typealias JSONObject = Map<String, JsonElement>
@@ -46,7 +51,10 @@ data class RequestOptions(val headers: Map<String, String> = emptyMap(), val tim
     val captchaType: String? = null, val timeout: Double? = null, val cabinetId: String? = null, val markAsUploaded: Boolean? = null,
 )
 
-@Serializable data class Task(
+@OptIn(ExperimentalSerializationApi::class)
+@KeepGeneratedSerializer
+@Serializable(with = TaskCookieStateSerializer::class)
+data class Task(
     val name: String, val url: String, val mode: String, val description: String = "", val id: String? = null,
     val wait: Double? = null, val selector: String? = null, val rotateUserAgents: Boolean? = null,
     val rotateProxies: Boolean? = null, val rotateViewport: Boolean? = null, val humanTyping: Boolean? = null,
@@ -58,6 +66,33 @@ data class RequestOptions(val headers: Map<String, String> = emptyMap(), val tim
     /** Omit to inherit the instance default, use JsonNull for fresh state, or JsonPrimitive(id) for a named state. */
     val cookieStateId: JsonElement? = null,
 )
+
+/**
+ * Preserve the distinction between a missing cookieStateId (inherit default) and
+ * an explicit JSON null (start with a fresh cookie state) when reading server Tasks.
+ *
+ * kotlinx.serialization decodes JSON null into Kotlin null for a nullable JsonElement.
+ * Keep the generated serializer for every other Task field and for encoding.
+ */
+@OptIn(ExperimentalSerializationApi::class)
+object TaskCookieStateSerializer : KSerializer<Task> {
+    private val delegate by lazy { Task.generatedSerializer() }
+
+    override val descriptor: SerialDescriptor get() = delegate.descriptor
+
+    override fun serialize(encoder: Encoder, value: Task) = delegate.serialize(encoder, value)
+
+    override fun deserialize(decoder: Decoder): Task {
+        if (decoder !is JsonDecoder) return delegate.deserialize(decoder)
+        val element = decoder.decodeJsonElement()
+        val task = decoder.json.decodeFromJsonElement(delegate, element)
+        return if ((element as? JsonObject)?.get("cookieStateId") == JsonNull) {
+            task.copy(cookieStateId = JsonNull)
+        } else {
+            task
+        }
+    }
+}
 
 @Serializable data class ExecuteTaskOptions(val variables: RuntimeVariables? = null, val taskVariables: RuntimeVariables? = null, val webhookUrl: String? = null, val runId: String? = null)
 @Serializable data class ExecutionResult<T>(val data: T? = null, val outcome: String? = null, val success: Boolean? = null, val error: String? = null, val runId: String? = null)
