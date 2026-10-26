@@ -56,6 +56,9 @@ class TasksResource internal constructor(@PublishedApi internal val client: Figr
     suspend fun delete(id: String, options: RequestOptions = RequestOptions()): JsonObject = client.send("DELETE", "/api/tasks/${pathId(id)}", options = options)
     suspend fun versions(id: String, options: RequestOptions = RequestOptions()): List<TaskVersion> = client.get<JsonObject>("/api/tasks/${pathId(id)}/versions", options = options).getValue("versions").let { client.json.decodeFromJsonElement(ListSerializer(TaskVersion.serializer()), it) }
     suspend fun version(id: String, versionId: String, options: RequestOptions = RequestOptions()): JsonObject = client.get("/api/tasks/${pathId(id)}/versions/${pathId(versionId)}", options = options)
+    /** Deletes a saved Task version; requires workspace-session authentication. */
+    suspend fun deleteVersion(id: String, versionId: String, options: RequestOptions = RequestOptions()): JsonObject =
+        client.send("DELETE", "/api/tasks/${pathId(id)}/versions/${pathId(versionId)}", options = options)
     suspend fun clearVersions(id: String, options: RequestOptions = RequestOptions()): JsonObject = client.send("POST", "/api/tasks/${pathId(id)}/versions/clear", options = options)
     suspend fun rollback(id: String, versionId: String, options: RequestOptions = RequestOptions()): Task = client.send("POST", "/api/tasks/${pathId(id)}/rollback", jsonObject("versionId" to string(versionId)), options = options)
     suspend inline fun <reified T> run(id: String, input: ExecuteTaskOptions = ExecuteTaskOptions(), options: RequestOptions = RequestOptions()): ExecutionResult<T> = client.send("POST", "/tasks/${pathId(id)}/api", client.json.encodeToJsonElement(ExecuteTaskOptions.serializer(), input), options = options)

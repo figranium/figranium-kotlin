@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added session-only `tasks.deleteVersion(id, versionId)` for Figranium v0.21 Task version deletion, with response, encoding and CSRF regression coverage.
 - Corrected Cabinet list decoding for the v0.21 `{ defaultCabinetId, cabinets }` response envelope.
 - Corrected Cabinet ZIP extraction to decode a single `CabinetItem` rather than an `items` wrapper.
 - Added the optional `unuploadedCount` Cabinet field and response-shape regression tests.
