@@ -36,6 +36,33 @@ class TaskCompatibilityTest {
         assertEquals(JsonPrimitive("cookie-1"), named["cookieStateId"])
     }
 
+    @Test fun decodingTaskPreservesFreshVersusInheritedCookieState() {
+        val minimal = """{"name":"Search","url":"https://example.com","mode":"agent"}"""
+        val inherited = json.decodeFromString(Task.serializer(), minimal)
+        assertEquals(null, inherited.cookieStateId)
+        val inheritedRoundTrip = json.parseToJsonElement(
+            json.encodeToString(Task.serializer(), inherited)
+        ).jsonObject
+        assertFalse(inheritedRoundTrip.containsKey("cookieStateId"))
+
+        val fresh = """{"name":"Search","url":"https://example.com","mode":"agent","cookieStateId":null}"""
+        val decodedFresh = json.decodeFromString(Task.serializer(), fresh)
+        assertEquals(JsonNull, decodedFresh.cookieStateId)
+        val freshRoundTrip = json.parseToJsonElement(
+            json.encodeToString(Task.serializer(), decodedFresh)
+        ).jsonObject
+        assertTrue(freshRoundTrip.containsKey("cookieStateId"))
+        assertEquals(JsonNull, freshRoundTrip["cookieStateId"])
+
+        val named = """{"name":"Search","url":"https://example.com","mode":"agent","cookieStateId":"login"}"""
+        val decodedNamed = json.decodeFromString(Task.serializer(), named)
+        assertEquals(JsonPrimitive("login"), decodedNamed.cookieStateId)
+        val namedRoundTrip = json.parseToJsonElement(
+            json.encodeToString(Task.serializer(), decodedNamed)
+        ).jsonObject
+        assertEquals(JsonPrimitive("login"), namedRoundTrip["cookieStateId"])
+    }
+
     @Test fun deleteTaskVersionUsesSessionRouteAndEncodedIds() = runBlocking {
         val requests = mutableListOf<Request>()
         val transport = OkHttpClient.Builder().addInterceptor { chain ->
