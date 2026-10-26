@@ -91,7 +91,7 @@ class CapturesResource internal constructor(private val client: Figranium) {
 }
 
 class CabinetsResource internal constructor(private val client: Figranium) {
-    suspend fun list(options: RequestOptions = RequestOptions()): List<Cabinet> = client.get("/api/cabinets", options = options)
+    suspend fun list(options: RequestOptions = RequestOptions()): List<Cabinet> = client.get<JsonObject>("/api/cabinets", options = options).getValue("cabinets").let { client.json.decodeFromJsonElement(ListSerializer(Cabinet.serializer()), it) }
     suspend fun create(name: String, options: RequestOptions = RequestOptions()): Cabinet = client.send("POST", "/api/cabinets", jsonObject("name" to string(name)), options = options)
     suspend fun rename(id: String, name: String, options: RequestOptions = RequestOptions()): Cabinet = client.send("PATCH", "/api/cabinets/${pathId(id)}", jsonObject("name" to string(name)), options = options)
     suspend fun delete(id: String, targetCabinetId: String? = null, migrate: Boolean = false, options: RequestOptions = RequestOptions()): JsonObject = client.send("DELETE", "/api/cabinets/${pathId(id)}", jsonObject("targetCabinetId" to string(targetCabinetId), "mode" to if (migrate) JsonPrimitive("migrate") else null), options = options)
@@ -100,7 +100,7 @@ class CabinetsResource internal constructor(private val client: Figranium) {
     suspend fun setItemStatus(cabinetId: String, itemIds: List<String>, status: String, options: RequestOptions = RequestOptions()): List<CabinetItem> = client.send<JsonObject>("PATCH", "/api/cabinets/${pathId(cabinetId)}/items/status", jsonObject("itemIds" to client.json.encodeToJsonElement(ListSerializer(String.serializer()), itemIds), "status" to string(status)), options = options).getValue("items").let { client.json.decodeFromJsonElement(ListSerializer(CabinetItem.serializer()), it) }
     suspend fun removeItems(cabinetId: String, itemIds: List<String>, options: RequestOptions = RequestOptions()): JsonObject = client.send("DELETE", "/api/cabinets/${pathId(cabinetId)}/items", jsonObject("itemIds" to client.json.encodeToJsonElement(ListSerializer(String.serializer()), itemIds)), options = options)
     suspend fun zipItems(cabinetId: String, itemIds: List<String>, name: String? = null, options: RequestOptions = RequestOptions()): CabinetItem = client.send("POST", "/api/cabinets/${pathId(cabinetId)}/zip", jsonObject("itemIds" to client.json.encodeToJsonElement(ListSerializer(String.serializer()), itemIds), "name" to string(name)), options = options)
-    suspend fun unzipItem(cabinetId: String, itemId: String, options: RequestOptions = RequestOptions()): List<CabinetItem> = client.send<JsonObject>("POST", "/api/cabinets/${pathId(cabinetId)}/items/${pathId(itemId)}/unzip", options = options).getValue("items").let { client.json.decodeFromJsonElement(ListSerializer(CabinetItem.serializer()), it) }
+    suspend fun unzipItem(cabinetId: String, itemId: String, options: RequestOptions = RequestOptions()): CabinetItem = client.send("POST", "/api/cabinets/${pathId(cabinetId)}/items/${pathId(itemId)}/unzip", options = options)
     fun downloadUrl(cabinetId: String, itemId: String): String = client.baseUrl.newBuilder().addPathSegments("api/cabinets/${pathId(cabinetId)}/items/${pathId(itemId)}/download").build().toString()
 }
 
