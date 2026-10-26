@@ -73,7 +73,7 @@ object ExecutionStatusSerializer : KSerializer<String> {
 @Serializable data class Execution(val id: String, val timestamp: Double, val method: String? = null, val path: String? = null, @Serializable(with = ExecutionStatusSerializer::class) val status: String? = null, val outcome: String? = null, val durationMs: Double? = null, val source: String? = null, val mode: String? = null, val taskId: String? = null, val taskName: String? = null, val url: String? = null, val result: JsonElement? = null)
 @Serializable data class TaskSummary(val id: String, val name: String, val description: String? = null)
 @Serializable data class TaskVersion(val id: String, val timestamp: Double, val name: String? = null, val mode: String? = null)
-@Serializable data class Cabinet(val id: String, val name: String, val isDefault: Boolean? = null, val itemCount: Int? = null, val createdAt: Double? = null)
+@Serializable data class Cabinet(val id: String, val name: String, val isDefault: Boolean? = null, val itemCount: Int? = null, val unuploadedCount: Int? = null, val createdAt: Double? = null)
 @Serializable data class CabinetItem(val id: String, val name: String, val kind: String, val status: String, val size: Int? = null, val createdAt: Double? = null, val sourceTaskId: String? = null, val sourceRunId: String? = null)
 @Serializable data class Capture(val name: String, val url: String, val size: Int, val modified: Double, val type: String)
 @Serializable data class CredentialInput(val name: String, val provider: String = "baserow", val config: Map<String, String>)
