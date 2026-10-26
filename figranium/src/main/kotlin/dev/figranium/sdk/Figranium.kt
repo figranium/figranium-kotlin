@@ -60,9 +60,11 @@ class Figranium @JvmOverloads constructor(
 
     @PublishedApi internal suspend fun <T> request(method: String, path: String, serializer: KSerializer<T>, body: JsonElement? = null, query: Map<String, String?> = emptyMap(), options: RequestOptions = RequestOptions()): T {
         val url = baseUrl.newBuilder().addEncodedPathSegments(path.trim('/')).apply { query.forEach { (key, value) -> if (!value.isNullOrEmpty()) addQueryParameter(key, value) } }.build()
-        val request = Request.Builder().url(url).method(method, body?.let { json.encodeToString(JsonElement.serializer(), it).toRequestBody(JSON_MEDIA_TYPE) }).apply {
+        val requestBody = body?.let { json.encodeToString(JsonElement.serializer(), it).toRequestBody(JSON_MEDIA_TYPE) }
+            ?: if (method.uppercase() in setOf("POST", "PUT", "PATCH")) "{}".toRequestBody(JSON_MEDIA_TYPE) else null
+        val request = Request.Builder().url(url).method(method, requestBody).apply {
             header("accept", "application/json")
-            if (body != null) header("content-type", "application/json")
+            if (requestBody != null) header("content-type", "application/json")
             headers.forEach { (key, value) -> header(key, value) }; options.headers.forEach { (key, value) -> header(key, value) }
             if (authentication is FigraniumAuthentication.ApiKey) header(authentication.header, if (authentication.header.equals("authorization", true)) "Bearer ${authentication.value}" else authentication.value)
             if (authentication == FigraniumAuthentication.Session && method.uppercase() !in setOf("GET", "HEAD", "OPTIONS") &&
