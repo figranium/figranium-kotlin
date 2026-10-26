@@ -1,5 +1,12 @@
 package dev.figranium.sdk
 
+import kotlinx.coroutines.runBlocking
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Protocol
+import okhttp3.Request
+import okhttp3.Response
+import okhttp3.ResponseBody.Companion.toResponseBody
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonPrimitive
@@ -27,6 +34,31 @@ class TaskCompatibilityTest {
             json.encodeToString(Task.serializer(), base.copy(cookieStateId = JsonPrimitive("cookie-1")))
         ).jsonObject
         assertEquals(JsonPrimitive("cookie-1"), named["cookieStateId"])
+    }
+
+    @Test fun deleteTaskVersionUsesSessionRouteAndEncodedIds() = runBlocking {
+        val requests = mutableListOf<Request>()
+        val transport = OkHttpClient.Builder().addInterceptor { chain ->
+            requests.add(chain.request())
+            Response.Builder()
+                .request(chain.request())
+                .protocol(Protocol.HTTP_1_1)
+                .code(200)
+                .message("OK")
+                .body("""{"success":true,"versionId":"version/1"}""".toResponseBody("application/json".toMediaType()))
+                .build()
+        }.build()
+        val client = Figranium(
+            baseUrl = "http://localhost:11345",
+            authentication = FigraniumAuthentication.Session,
+            httpClient = transport,
+        )
+        val result = client.tasks.deleteVersion("task/1", "version/1")
+        assertEquals(JsonPrimitive(true), result["success"])
+        assertEquals(JsonPrimitive("version/1"), result["versionId"])
+        assertEquals("DELETE", requests.single().method)
+        assertEquals("/api/tasks/task%2F1/versions/version%2F1", requests.single().url.encodedPath)
+        assertEquals("XMLHttpRequest", requests.single().header("X-Requested-With"))
     }
 
     @Test fun baserowOutputIncludesDatabaseAndDedicated() {
