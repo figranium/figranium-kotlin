@@ -5,6 +5,7 @@
 - Corrected Cabinet list decoding for the v0.21 `{ defaultCabinetId, cabinets }` response envelope.
 - Corrected Cabinet ZIP extraction to decode a single `CabinetItem` rather than an `items` wrapper.
 - Added the optional `unuploadedCount` Cabinet field and response-shape regression tests.
+- Fixed no-payload POST/PUT/PATCH requests to send `{}` instead of an invalid null OkHttp request body (including Cabinet unzip and Task touch).
 
 ## [0.3.0] - 2026-10-09
 
