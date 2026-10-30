@@ -220,3 +220,7 @@ The Gradle build is configured for Maven Central Portal publishing. Set `mavenCe
 ## License
 
 Apache-2.0
+
+## Authenticated redirects
+
+The SDK rejects HTTP 3xx redirects for API requests and execution streams, even when an injected `OkHttpClient` enables redirects. This prevents custom `x-api-key` headers from being forwarded to another origin. Configure the final Figranium server URL directly; rejected redirects surface as `FigraniumException(code = "REDIRECT_NOT_ALLOWED")`.

@@ -46,6 +46,8 @@ class Figranium @JvmOverloads constructor(
     @PublishedApi internal val json: Json = Json { ignoreUnknownKeys = true; explicitNulls = false; encodeDefaults = false },
 ) {
     @PublishedApi internal val baseUrl: HttpUrl = baseUrl.trim().removeSuffix("/").toHttpUrl()
+    /** Enforce no redirects even when callers inject an OkHttpClient that follows them. */
+    internal val safeHttpClient: OkHttpClient = httpClient.newBuilder().followRedirects(false).followSslRedirects(false).build()
     internal val usesSession: Boolean get() = authentication == FigraniumAuthentication.Session
     val tasks = TasksResource(this); val executions = ExecutionsResource(this)
     val cookieStates = CookieStatesResource(this)
@@ -75,10 +77,11 @@ class Figranium @JvmOverloads constructor(
                 }
             ) header("X-Requested-With", "XMLHttpRequest")
         }.build()
-        val client = if (options.timeoutMillis == null) httpClient.newBuilder().callTimeout(timeoutMillis, TimeUnit.MILLISECONDS).build() else httpClient.newBuilder().callTimeout(options.timeoutMillis, TimeUnit.MILLISECONDS).build()
+        val client = if (options.timeoutMillis == null) safeHttpClient.newBuilder().callTimeout(timeoutMillis, TimeUnit.MILLISECONDS).build() else safeHttpClient.newBuilder().callTimeout(options.timeoutMillis, TimeUnit.MILLISECONDS).build()
         val response = client.newCall(request).await()
         response.use {
             val raw = it.body.string()
+            if (it.code in 300..399) throw FigraniumException(it.code, "REDIRECT_NOT_ALLOWED", message = "Refusing HTTP redirect for a Figranium request")
             if (!it.isSuccessful) throw error(raw, it)
             if (raw.isBlank() || it.code == 204) throw FigraniumException(it.code, "EMPTY_RESPONSE", message = "Figranium returned an empty response")
             return try { json.decodeFromString(serializer, raw) } catch (cause: Exception) { throw FigraniumException(it.code, "INVALID_RESPONSE", message = "Figranium returned an invalid response: ${cause.message}") }
@@ -90,11 +93,12 @@ class Figranium @JvmOverloads constructor(
             headers.forEach { (key, value) -> header(key, value) }; options.headers.forEach { (key, value) -> header(key, value) }
             if (authentication is FigraniumAuthentication.ApiKey) header(authentication.header, if (authentication.header.equals("authorization", true)) "Bearer ${authentication.value}" else authentication.value)
         }.build()
-        val call = httpClient.newBuilder().readTimeout(0, TimeUnit.MILLISECONDS).build().newCall(request)
+        val call = safeHttpClient.newBuilder().readTimeout(0, TimeUnit.MILLISECONDS).build().newCall(request)
         call.enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) { close(FigraniumException(code = "NETWORK_ERROR", message = "Unable to open Figranium stream: ${e.message}")) }
             override fun onResponse(call: Call, response: Response) {
                 response.use {
+                    if (it.code in 300..399) { close(FigraniumException(it.code, "REDIRECT_NOT_ALLOWED", message = "Refusing HTTP redirect for a Figranium stream")); return }
                     if (!it.isSuccessful) { close(error(it.body.string(), it)); return }
                     val lines = mutableListOf<String>()
                     try { it.body.charStream().buffered().forEachLine { line -> if (line.isEmpty()) { parseSse(lines)?.let(::trySend); lines.clear() } else lines += line }; parseSse(lines)?.let(::trySend); close() }
