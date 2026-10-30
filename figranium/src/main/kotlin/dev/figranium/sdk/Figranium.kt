@@ -49,6 +49,8 @@ class Figranium @JvmOverloads constructor(
     internal val usesSession: Boolean get() = authentication == FigraniumAuthentication.Session
     val tasks = TasksResource(this); val executions = ExecutionsResource(this)
     val cookieStates = CookieStatesResource(this)
+    /** Workspace-session-only scoped API-key administration (v0.21+). */
+    val apiKeys = ApiKeysResource(this)
     val schedules = SchedulesResource(this); val captures = CapturesResource(this); val cabinets = CabinetsResource(this)
     
     val execution = ExecutionResource(this); val health = HealthResource(this); val templates = TemplatesResource(this)

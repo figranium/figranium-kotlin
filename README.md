@@ -124,7 +124,30 @@ val created = sessionClient.cookieStates.create(
 )
 ```
 
-Session-authenticated mutations automatically include the CSRF hint `X-Requested-With: XMLHttpRequest` unless an Origin, Referer, or X-Requested-With header is supplied. Scoped API keys cannot administer cookie states. Manage scoped keys, 1Password credentials, Baserow connections, imports/exports and Cloud sign-in in the authenticated Figranium workspace UI.
+Session-authenticated mutations automatically include the CSRF hint `X-Requested-With: XMLHttpRequest` unless an Origin, Referer, or X-Requested-With header is supplied. Scoped API keys cannot administer cookie states. Manage 1Password credentials, Baserow connections, imports/exports and Cloud sign-in in the authenticated Figranium workspace UI. Scoped keys can be administered through `apiKeys` with a workspace session.
+
+### Scoped API keys (v0.21+)
+
+Scoped API-key management requires an authenticated workspace session; an API key cannot administer other keys. Supply an existing cookie-authenticated OkHttp client:
+
+```kotlin
+val admin = Figranium(
+    baseUrl = "https://figranium.example",
+    authentication = FigraniumAuthentication.Session,
+    httpClient = authenticatedOkHttpClient,
+)
+val created = admin.apiKeys.create(ApiKeyCreateInput(
+    permissions = listOf(ApiKeyPermission.TASKS_RUN),
+    name = "CI runner",
+    taskIds = listOf("task-123"),
+))
+val oneTimeSecret = created.secret // Store securely; never returned again.
+val listed = admin.apiKeys.list()
+admin.apiKeys.rename(created.key.id, "Production runner")
+admin.apiKeys.revoke(created.key.id)
+```
+
+Valid permissions are `tasks:read`, `tasks:run`, and `tasks:manage`. An omitted or empty `taskIds` allowlist means **all Tasks**. Treat `legacySecret` from `list()` as sensitive. The SDK rejects API-key or unauthenticated management locally and sends the CSRF hint on session mutations.
 
 ## Streams and execution watching
 
@@ -164,6 +187,7 @@ Pass `RequestOptions(headers = ..., timeoutMillis = ...)` to any resource call t
 | `templates` | Browse, search and retrieve templates; report successful imports |
 | `tasks` | Save, update, delete, version, and execute tasks |
 | `cookieStates` | Session-only list/get/create/rename/update/delete browser storage states |
+| `apiKeys` | Session-only scoped API-key list/create/rename/revoke (v0.21+) |
 | `executions` | List, inspect, stop, delete, clear, stream, and watch runs |
 | `schedules` | Configure, describe, disable, and inspect schedules |
 | `captures` | List/delete recordings and screenshots |
